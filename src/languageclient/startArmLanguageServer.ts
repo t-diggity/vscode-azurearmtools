@@ -52,7 +52,13 @@ export async function startArmLanguageServer(): Promise<void> {
             try {
                 // The server is implemented in .NET Core. We run it by calling 'dotnet' with the dll as an argument
                 let serverDllPath: string = findLanguageServer();
-                let dotnetExePath: string = await getDotNetPath();
+                let dotnetExePath: string | undefined = await getDotNetPath();
+                if (!dotnetExePath) {
+                    // Acquisition failed
+                    ext.languageServerState = LanguageServerState.Failed;
+                    return;
+                }
+
                 await startLanguageClient(serverDllPath, dotnetExePath);
 
                 ext.languageServerState = LanguageServerState.Started;
@@ -164,11 +170,11 @@ export async function startLanguageClient(serverDllPath: string, dotnetExePath: 
     });
 }
 
-async function getDotNetPath(): Promise<string> {
-    return <string>await callWithTelemetryAndErrorHandling("getDotNetPath", async (actionContext: IActionContext) => {
+async function getDotNetPath(): Promise<string | undefined> {
+    return await callWithTelemetryAndErrorHandling("getDotNetPath", async (actionContext: IActionContext) => {
         actionContext.errorHandling.rethrow = true;
 
-        let dotnetPath: string;
+        let dotnetPath: string | undefined;
 
         const overriddenDotNetExePath = workspace.getConfiguration(configPrefix).get<string>(configKeys.dotnetExePath);
         if (typeof overriddenDotNetExePath === "string" && !!overriddenDotNetExePath) {
@@ -181,6 +187,11 @@ async function getDotNetPath(): Promise<string> {
             actionContext.telemetry.properties.overriddenDotNetExePath = "false";
 
             dotnetPath = await acquireSharedDotnetInstallation(dotnetVersion);
+            if (!dotnetPath) {
+                // Acquisition failed. Error will already have been displayed.
+                return undefined;
+            }
+
             if (!(await isFile(dotnetPath))) {
                 throw new Error(`The path returned for .net core does not exist: ${dotnetPath}`);
             }
