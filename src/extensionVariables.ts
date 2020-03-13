@@ -6,7 +6,8 @@
 import * as vscode from "vscode";
 import { IAzExtOutputChannel, IAzureUserInput, ITelemetryReporter } from "vscode-azureextensionui";
 import { LanguageClient } from "vscode-languageclient";
-import { isWebpack } from "./constants";
+import { IConfiguration, VsCodeConfiguration } from "./Configuration";
+import { configPrefix, isWebpack } from "./constants";
 import { assert } from "./fixed_assert";
 import { LanguageServerState } from "./languageclient/startArmLanguageServer";
 import { JsonOutlineProvider } from "./Treeview";
@@ -85,6 +86,8 @@ class ExtensionVariables {
 
     // Suite support - lets us know when diagnostics have been completely published for a file
     public addCompletedDiagnostic: boolean = false;
+
+    public readonly configuration: IConfiguration = new VsCodeConfiguration(configPrefix);
 }
 
 // tslint:disable-next-line: no-any
