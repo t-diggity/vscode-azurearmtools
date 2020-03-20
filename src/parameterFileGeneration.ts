@@ -15,9 +15,9 @@ import { IParameterDefinition } from './IParameterDefinition';
 import { assertNever } from './util/assertNever';
 import { indentMultilineString, removeIndentation } from './util/multilineStrings';
 
-const defaultIndent: number = 4;
+export const defaultTabSize: number = 4;
 
-export async function queryCreateParameterFile(actionContext: IActionContext, templateUri: Uri, template: DeploymentTemplate, indent: number = defaultIndent): Promise<Uri> {
+export async function queryCreateParameterFile(actionContext: IActionContext, templateUri: Uri, template: DeploymentTemplate, tabSize: number = defaultTabSize): Promise<Uri> {
     const all = <QuickPickItem>{ label: "All parameters" };
     const required = <QuickPickItem>{ label: "Only required parameters", description: "Uses only parameters that have no default value in the template file" };
 
@@ -43,7 +43,7 @@ export async function queryCreateParameterFile(actionContext: IActionContext, te
         throw new UserCancelledError();
     }
 
-    let paramsObj: string = createParameterFileContents(template, indent, onlyRequiredParams);
+    let paramsObj: string = createParameterFileContents(template, tabSize, onlyRequiredParams);
     await fse.writeFile(newUri.fsPath, paramsObj, {
         encoding: 'utf8'
     });
@@ -51,7 +51,7 @@ export async function queryCreateParameterFile(actionContext: IActionContext, te
     return newUri;
 }
 
-export function createParameterFileContents(template: DeploymentTemplate, indent: number, onlyRequiredParameters: boolean): string {
+export function createParameterFileContents(template: DeploymentTemplate, tabSize: number, onlyRequiredParameters: boolean): string {
     /* e.g.
 
     {
@@ -66,9 +66,9 @@ export function createParameterFileContents(template: DeploymentTemplate, indent
 
     */
 
-    const tab = makeIndent(indent);
+    const tab = makeIndent(tabSize);
 
-    const params: CaseInsensitiveMap<string, string> = createParameters(template, indent, onlyRequiredParameters);
+    const params: CaseInsensitiveMap<string, string> = createParameters(template, tabSize, onlyRequiredParameters);
     const paramsContent = params.map((key, value) => value).join(`,${os.EOL}`);
 
     let contents = `{
@@ -78,7 +78,7 @@ ${tab}"parameters": {
 `;
 
     if (params.size > 0) {
-        contents += indentMultilineString(paramsContent, indent * 2) + os.EOL;
+        contents += indentMultilineString(paramsContent, tabSize * 2) + os.EOL;
     }
 
     contents += `${tab}}
@@ -89,8 +89,9 @@ ${tab}"parameters": {
 
 /**
  * Creates text for a property using information for that property in a template file
+ * @param tabSize The number of spaces to indent at each level. The parameter text will start flush left
  */
-export function createParameterFromTemplateParameter(template: DeploymentTemplate, parameter: IParameterDefinition, indent: number = defaultIndent): string {
+export function createParameterFromTemplateParameter(template: DeploymentTemplate, parameter: IParameterDefinition, tabSize: number = defaultTabSize): string {
     /* e.g.
 
     "parameters": {
@@ -101,30 +102,20 @@ export function createParameterFromTemplateParameter(template: DeploymentTemplat
 
     */
 
-    let value: string = getDefaultValueFromType(parameter.validType, indent);
+    let value: string = getDefaultValueFromType(parameter.validType, tabSize);
     if (parameter.defaultValue) {
         const defValueSpan = parameter.defaultValue.span;
         const defValue: string = template.documentText.slice(defValueSpan.startIndex, defValueSpan.afterEndIndex);
         value = removeIndentation(defValue, true);
     }
 
-    const valueIndentedAfterFirstLine: string = indentMultilineString(value.trimLeft(), indent).trimLeft();
+    const valueIndentedAfterFirstLine: string = indentMultilineString(value.trimLeft(), tabSize).trimLeft();
 
     // tslint:disable-next-line:prefer-template
     return `"${parameter.nameValue.unquotedValue}": {` + os.EOL
-        + `${makeIndent(indent)}"value": ${valueIndentedAfterFirstLine}` + os.EOL
+        + `${makeIndent(tabSize)}"value": ${valueIndentedAfterFirstLine}` + os.EOL
         + `}`;
 }
-
-//asdf
-// export async function addParameterToParameterFile(editor: TextEditor, template: DeploymentTemplate, parameter: IParameterDefinition): Promise<void> {
-//     const parameterText: string = createParameterProperty(template, parameter, defaultIndent);
-//     appendPropertyTextIntoObject(editor, parameterText);
-// }
-
-// function appendPropertyTextIntoObject(editor: TextEditor, text: string, jsonObject: Json.ObjectValue) {
-
-// }
 
 function getDefaultValueFromType(propType: ExpressionType | undefined, indent: number): string {
     const comment = "// TODO: Fill in parameter value";
@@ -154,18 +145,18 @@ function getDefaultValueFromType(propType: ExpressionType | undefined, indent: n
     }
 }
 
-function createParameters(template: DeploymentTemplate, indent: number, onlyRequiredParameters: boolean): CaseInsensitiveMap<string, string> {
+function createParameters(template: DeploymentTemplate, tabSize: number, onlyRequiredParameters: boolean): CaseInsensitiveMap<string, string> {
     let params: CaseInsensitiveMap<string, string> = new CaseInsensitiveMap<string, string>();
 
     for (let paramDef of template.topLevelScope.parameterDefinitions) {
         if (!onlyRequiredParameters || !paramDef.defaultValue) {
-            params.set(paramDef.nameValue.unquotedValue, createParameterFromTemplateParameter(template, paramDef, indent));
+            params.set(paramDef.nameValue.unquotedValue, createParameterFromTemplateParameter(template, paramDef, tabSize));
         }
     }
 
     return params;
 }
 
-function makeIndent(indent: number): string {
-    return ' '.repeat(indent);
+function makeIndent(tabSize: number): string {
+    return ' '.repeat(tabSize);
 }

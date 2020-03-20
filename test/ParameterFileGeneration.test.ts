@@ -5,7 +5,7 @@
 // tslint:disable:max-func-body-length
 
 import * as assert from "assert";
-import { createParameterFileContents, createParameterProperty } from "../extension.bundle";
+import { createParameterFileContents, createParameterFromTemplateParameter } from "../extension.bundle";
 import { IDeploymentParameterDefinition, IDeploymentTemplate } from "./support/diagnostics";
 import { parseTemplate } from "./support/parseTemplate";
 
@@ -36,6 +36,15 @@ suite("parameterFileGeneration tests", () => {
             parameterDefinition: Partial<IDeploymentParameterDefinition>,
             expectedContents: string
         ): void {
+            testSinglePropertyWithIndent(testName, 4, parameterDefinition, expectedContents);
+        }
+
+        function testSinglePropertyWithIndent(
+            testName: string,
+            spacesPerIndent: number,
+            parameterDefinition: Partial<IDeploymentParameterDefinition>,
+            expectedContents: string
+        ): void {
             test(testName, async () => {
                 const parameterName = "parameter1";
                 const template: IDeploymentTemplate = {
@@ -53,7 +62,7 @@ suite("parameterFileGeneration tests", () => {
                 const foundDefinition = dt.topLevelScope.getParameterDefinition(parameterName);
                 assert(foundDefinition);
                 // tslint:disable-next-line:no-non-null-assertion
-                const param = createParameterProperty(dt, foundDefinition!, 4);
+                const param = createParameterFromTemplateParameter(dt, foundDefinition!, spacesPerIndent);
                 assert.equal(param, expectedContents);
             });
         }
@@ -217,6 +226,41 @@ suite("parameterFileGeneration tests", () => {
 }`);
 
             });
+        });
+
+        suite("with indentation", () => {
+            testSinglePropertyWithIndent(
+                "indent = 0",
+                0,
+                {
+                    type: "object",
+                    defaultValue: "abc"
+                },
+                `"parameter1": {
+"value": "abc"
+}`);
+
+            testSinglePropertyWithIndent(
+                "indent = 4",
+                4,
+                {
+                    type: "object",
+                    defaultValue: "abc"
+                },
+                `"parameter1": {
+    "value": "abc"
+}`);
+
+            testSinglePropertyWithIndent(
+                "indent = 8",
+                8,
+                {
+                    type: "object",
+                    defaultValue: "abc"
+                },
+                `"parameter1": {
+        "value": "abc"
+}`);
         });
     });
 });
