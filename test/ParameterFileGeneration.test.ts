@@ -9,7 +9,7 @@ import { createParameterFileContents, createParameterProperty } from "../extensi
 import { IDeploymentParameterDefinition, IDeploymentTemplate } from "./support/diagnostics";
 import { parseTemplate } from "./support/parseTemplate";
 
-suite("editParameterFile tests", () => {
+suite("parameterFileGeneration tests", () => {
     suite("createParameterFileContents", () => {
         function testCreateFile(
             testName: string,
