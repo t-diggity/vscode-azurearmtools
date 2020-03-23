@@ -41,7 +41,7 @@ export async function parseTemplateWithMarkers(
 
     // Always run these even if not checking against expected, to verify nothing throws
     const errors: Issue[] = await dt.getErrors(undefined);
-    const warnings: Issue[] = dt.warnings;
+    const warnings: Issue[] = dt.getWarnings();
     const errorMessages = errors.map(e => `Error: ${e.message}`);
     const warningMessages = warnings.map(e => `Warning: ${e.message}`);
 
