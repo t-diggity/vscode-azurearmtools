@@ -40,7 +40,7 @@ export async function parseTemplateWithMarkers(
     const dt: DeploymentTemplate = new DeploymentTemplate(unmarkedText, Uri.file("parseTemplate() template"));
 
     // Always run these even if not checking against expected, to verify nothing throws
-    const errors: Issue[] = await dt.errorsPromise;
+    const errors: Issue[] = await dt.getErrors(undefined);
     const warnings: Issue[] = dt.warnings;
     const errorMessages = errors.map(e => `Error: ${e.message}`);
     const warningMessages = warnings.map(e => `Warning: ${e.message}`);
