@@ -105,13 +105,17 @@ export class Item {
 }
 
 export enum CompletionKind {
+    // TLE completions
     Function = "Function",
     Parameter = "Parameter",
     Variable = "Variable",
     Property = "Property",
     Namespace = "Namespace",
 
+    // Template file completions
+    DtDependsOn = "DtDependsOn",
+
     // Parameter file completions
-    PropertyValue = "PropertyValue", // Parameter from the template file
-    NewPropertyValue = "NewPropertyValue" // New, unnamed parameter
+    DpPropertyValue = "DpPropertyValue", // Parameter from the template file
+    DpNewPropertyValue = "DpNewPropertyValue" // New, unnamed parameter
 }

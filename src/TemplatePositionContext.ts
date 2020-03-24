@@ -151,7 +151,7 @@ export class TemplatePositionContext extends PositionContext {
         const tleInfo = this.tleInfo;
         if (!tleInfo) {
             // No string at this position
-            return [];
+            return this.getDependsOnCompletions() ?? [];
         }
 
         // We're inside a JSON string. It may or may not contain square brackets.
@@ -182,6 +182,77 @@ export class TemplatePositionContext extends PositionContext {
         }
 
         return [];
+    }
+
+    // asdf test case-insensitivity - resources, dependsOn
+    private getDependsOnCompletions(): Completion.Item[] | undefined {
+        assert(!this.tleInfo, "Prerequiste: Should not be inside a string");
+
+        // tslint:disable-next-line:no-this-assignment
+        const me = this;
+
+        const valuesEnclosingCursor = this.document.jsonParseResult.getAllValuesAtCharacterIndex(this.documentCharacterIndex, Language.Contains.enclosed);
+
+        //asdf child resources
+        // [0] = top-level object
+        // [1] = resources property
+        // [2] = resources array value
+        // [3] = resource
+        // [4] = dependsOn property
+        // [5] = dependsOn array value
+        if (this.document.resources && valuesEnclosingCursor[2] === this.document.resources) {
+            const resourceObject = Json.asObjectValue(valuesEnclosingCursor[3]);
+            if (resourceObject) {
+                const propertyOfResource = valuesEnclosingCursor[4];
+                if (propertyOfResource instanceof Json.Property
+                    && propertyOfResource.nameValue.unquotedValue.toLowerCase() === templateKeys.resourceDependsOn.toLowerCase()) {
+                    const dependsOnArray = Json.asArrayValue(propertyOfResource.value);
+                    if (dependsOnArray && dependsOnArray === valuesEnclosingCursor[5]) {
+                        if (valuesEnclosingCursor[6] === undefined) {
+                            return getResourceIdCompletions();
+                        }
+                    }
+                }
+            }
+        }
+
+        return undefined;
+
+        function getResourceIdCompletions(): Completion.Item[] {
+            const results: Completion.Item[] = [];
+            // tslint:disable-next-line:no-non-null-assertion
+            for (let resourceValue of me.document.resources!.elements) {
+                const resourceObject = Json.asObjectValue(resourceValue);
+                if (resourceObject) {
+                    const resName = Json.asStringValue(resourceObject.getPropertyValue(templateKeys.resourceName));
+                    const resType = Json.asStringValue(resourceObject.getPropertyValue(templateKeys.resourceType));
+                    if (resName && resType) {
+                        const insertText =
+                            `"[resourceId(${escapeTleString(resType.unquotedValue)}, ${escapeTleString(resName.unquotedValue)}))]"`;
+                        results.push(new Completion.Item(
+                            insertText,
+                            insertText,
+                            me.emptySpanAtDocumentCharacterIndex,
+                            Completion.CompletionKind.DtDependsOn,
+                            insertText,
+                            insertText
+                        ));
+
+                        const label = ` ${escapeTleString(resName.unquotedValue)} (${escapeTleString(resType.unquotedValue)})]"`;
+                        results.push(new Completion.Item(
+                            label,
+                            insertText,
+                            me.emptySpanAtDocumentCharacterIndex,
+                            Completion.CompletionKind.DtDependsOn,
+                            insertText,
+                            insertText
+                        ));
+                    }
+                }
+            }
+
+            return results;
+        }
     }
 
     /**
@@ -654,4 +725,13 @@ interface ITleInfo {
      */
     tleValue: TLE.Value | undefined;
 
+}
+
+//asdf
+function escapeTleString(s: string): string {
+    if (s[0] === '[' && s[s.length - 1] === ']') {
+        return s.slice(1, s.length - 2); //asdf
+    } else {
+        return `'${s}'`;
+    }
 }

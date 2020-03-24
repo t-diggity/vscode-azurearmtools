@@ -42,12 +42,16 @@ export function toVsCodeCompletionItem(deploymentFile: DeploymentDocument, item:
             vscodeItem.kind = vscode.CompletionItemKind.Unit;
             break;
 
-        case Completion.CompletionKind.PropertyValue:
+        case Completion.CompletionKind.DpPropertyValue:
             vscodeItem.kind = vscode.CompletionItemKind.Property;
             break;
 
-        case Completion.CompletionKind.NewPropertyValue:
+        case Completion.CompletionKind.DpNewPropertyValue:
             vscodeItem.kind = vscode.CompletionItemKind.Snippet;
+            break;
+
+        case Completion.CompletionKind.DtDependsOn:
+            vscodeItem.kind = vscode.CompletionItemKind.Reference; //asdf
             break;
 
         default:
