@@ -272,7 +272,7 @@ export class TemplatePositionContext extends PositionContext {
                         //`"[resourceId(${escapeTleString(resType.unquotedValue)}, ${escapeTleString(resName.unquotedValue)})]"`;
 
                         //const sortText = `"[${escapeTleString(resName.unquotedValue)}, ${escapeTleString(resType.unquotedValue)}]"`;
-                        const sortText = resName.unquotedValue;
+                        //const sortText = resName.unquotedValue;
                         //addFullResourceId();
 
                         const exp = ext.configuration.get<string>('dependsOnExperiment');
@@ -292,6 +292,7 @@ export class TemplatePositionContext extends PositionContext {
 
                         function addResourceName(): void {
                             const label = fullResourceIdExpression;
+                            const sortText = label;
                             results.push(new Completion.Item(
                                 label,
                                 fullResourceIdExpression,
@@ -309,6 +310,7 @@ export class TemplatePositionContext extends PositionContext {
                             const label =
                                 // tslint:disable-next-line:no-non-null-assertion
                                 `"[resourceId(${escapeTleString(resType!.unquotedValue)}, ${escapeTleString(resName!.unquotedValue)})]"`;
+                            const sortText = label;
                             results.push(new Completion.Item(
                                 label,
                                 fullResourceIdExpression,
@@ -327,6 +329,7 @@ export class TemplatePositionContext extends PositionContext {
                                 // asdf remove quotes
                                 // tslint:disable-next-line:no-non-null-assertion
                                 `"resourceId: ${escapeTleString(resName!.unquotedValue)}"`;
+                            const sortText = label;
                             results.push(new Completion.Item(
                                 label,
                                 fullResourceIdExpression,
@@ -389,6 +392,8 @@ export class TemplatePositionContext extends PositionContext {
                     //const replaceSpan = new language.Span(insertIndex, insertLength);
 
                     const typeInsertionText = escapeTleString(resType.unquotedValue);
+                    const label = typeInsertionText;
+                    const sortText = label;
                     results.push(new Completion.Item(
                         typeInsertionText,
                         typeInsertionText,
@@ -398,7 +403,7 @@ export class TemplatePositionContext extends PositionContext {
                         typeInsertionText,
                         undefined,
                         undefined,
-                        undefined,
+                        sortText,
                         [',']
                     ));
                 }
@@ -408,23 +413,34 @@ export class TemplatePositionContext extends PositionContext {
         return results;
     }
 
-    private getMatchingResourceNameCompletions(prefix: string, tleValue: TLE.StringValue | TLE.FunctionCallValue, tleCharacterIndex: number, scope: TemplateScope): Completion.Item[] {
+    private getMatchingResourceNameCompletions(prefix: string, tleValue: TLE.FunctionCallValue | TLE.FunctionCallValue, tleCharacterIndex: number, scope: TemplateScope): Completion.Item[] {
         //const replaceSpanInfo: ReplaceSpanInfo = this.getReplaceSpanInfo(tleValue, tleCharacterIndex);
         const replaceSpan = new language.Span(tleCharacterIndex, 0);
+
+        let resourceIdTypeArg: string | undefined;
+        const resourceIdTypeArgExpr = tleValue.argumentExpressions[0];
+        if (resourceIdTypeArgExpr) {
+            resourceIdTypeArg = TLE.asStringValue(resourceIdTypeArgExpr)?.unquotedValue; // asdf what if expression?
+        }
 
         const results: Completion.Item[] = [];
         for (let resourceValue of this.document.resources?.elements ?? []) {
             const resourceObject = Json.asObjectValue(resourceValue);
             if (resourceObject) {
                 const resName = Json.asStringValue(resourceObject.getPropertyValue(templateKeys.resourceName));
-                //const resType = Json.asStringValue(resourceObject.getPropertyValue(templateKeys.resourceType));
+                const resType = Json.asStringValue(resourceObject.getPropertyValue(templateKeys.resourceType));
                 if (resName) {
-                    //const sortText = `"[${escapeTleString(resName.unquotedValue)}, ${escapeTleString(resType.unquotedValue)}]"`;
+                    const sortText = resName.unquotedValue; //asdf?
                     //const replaceSpan = new language.Span(insertIndex, insertLength);
 
+                    if (resourceIdTypeArg && resType && resType.unquotedValue !== resourceIdTypeArg) { //asdf what if expr?
+                        continue; //asdf
+                    }
+
                     const typeInsertionText = escapeTleString(resName.unquotedValue);
+                    const label = typeInsertionText;
                     results.push(new Completion.Item(
-                        typeInsertionText,
+                        label,
                         typeInsertionText,
                         replaceSpan, //asdf replaceSpanInfo.includeRightParenthesisInCompletion?
                         Completion.CompletionKind.DtDependsOn, //asdf
@@ -432,7 +448,7 @@ export class TemplatePositionContext extends PositionContext {
                         typeInsertionText,
                         undefined,
                         undefined,
-                        undefined,
+                        sortText,
                         [')', ','] //asdf:
                     ));
                 }
