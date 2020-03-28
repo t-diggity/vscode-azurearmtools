@@ -23,6 +23,8 @@ export function toVsCodeCompletionItem(deploymentFile: DeploymentDocument, item:
     vscodeItem.insertText = new vscode.SnippetString(item.insertText);
     vscodeItem.detail = item.detail;
     vscodeItem.documentation = item.documention;
+    vscodeItem.sortText = item.sortText;
+    vscodeItem.commitCharacters = item.commitCharacters;
 
     switch (item.kind) {
         case Completion.CompletionKind.Function:
@@ -52,6 +54,10 @@ export function toVsCodeCompletionItem(deploymentFile: DeploymentDocument, item:
 
         case Completion.CompletionKind.DtDependsOn:
             vscodeItem.kind = vscode.CompletionItemKind.Reference; //asdf
+            break;
+
+        case Completion.CompletionKind.DtDependsOn2:
+            vscodeItem.kind = vscode.CompletionItemKind.Snippet; //asdf
             break;
 
         default:
