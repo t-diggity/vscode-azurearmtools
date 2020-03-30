@@ -713,7 +713,7 @@ export class AzureRMTools {
                 templateOrParameterDocumentSelector,
                 completionProvider,
                 "'", "[", ".", '"', '(',
-                ',' //asdf?
+                ',', ' ' //asdf?
             ));
 
         // tslint:disable-next-line:no-suspicious-comment
