@@ -8,7 +8,7 @@ import { MarkdownString } from "vscode";
 import { AzureRMAssets, BuiltinFunctionMetadata } from "./AzureRMAssets";
 import { CachedValue } from "./CachedValue";
 import * as Completion from "./Completion";
-import { templateKeys } from "./constants";
+import { armTemplateLanguageId, templateKeys } from "./constants";
 import { DeploymentTemplate } from "./DeploymentTemplate";
 import { ext } from "./extensionVariables";
 import { assert } from './fixed_assert';
@@ -267,7 +267,7 @@ export class TemplatePositionContext extends PositionContext {
                             //     "type": ${resType.quotedValue},
                             //     "apiversion": ${apiVersion?.quotedValue /*asdf*/}
                             // }`,
-                            'arm-template' // asdf constant
+                            armTemplateLanguageId
                         ); // asdf limit length
                         //`"[resourceId(${escapeTleString(resType.unquotedValue)}, ${escapeTleString(resName.unquotedValue)})]"`;
 
