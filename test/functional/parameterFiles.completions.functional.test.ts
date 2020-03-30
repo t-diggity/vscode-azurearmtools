@@ -40,6 +40,7 @@ const defaultTemplate = {
 
 suite("Functional parameter file completions", () => {
 
+    // CONSIDER: Could use executeCompletionItemProvider instead
     function createCompletionsFunctionalTest(
         testName: string,
         params: string | Partial<IDeploymentParametersFile>,
