@@ -253,7 +253,7 @@ export class TemplatePositionContext extends PositionContext {
                     //const apiVersion = Json.asStringValue(resourceObject.getPropertyValue(templateKeys.resourceApiVersion));
                     if (resName && resType) {
                         //const sortText = `"[${escapeTleString(resName.unquotedValue)}, ${escapeTleString(resType.unquotedValue)}]"`;
-                        const replaceSpan = new language.Span(insertIndex, insertLength);
+                        const span = new language.Span(insertIndex, insertLength);
 
                         const fullResourceIdExpression =
                             `"[resourceId(${escapeTleString(resType.unquotedValue)}, ${escapeTleString(resName.unquotedValue)})]"`;
@@ -293,17 +293,15 @@ export class TemplatePositionContext extends PositionContext {
                         function addResourceName(): void {
                             const label = fullResourceIdExpression;
                             const sortText = label;
-                            results.push(new Completion.Item(
+                            results.push(new Completion.Item({
                                 label,
-                                fullResourceIdExpression,
-                                replaceSpan,
-                                Completion.CompletionKind.DtDependsOn,
-                                fullResourceIdExpression,
+                                insertText: fullResourceIdExpression,
+                                span,
+                                kind: Completion.CompletionKind.DtDependsOn,
+                                detail: fullResourceIdExpression,
                                 documentation,
-                                undefined,
-                                undefined,
                                 sortText
-                            ));
+                            }));
                         }
 
                         function addFullResourceId(): void {
@@ -311,17 +309,15 @@ export class TemplatePositionContext extends PositionContext {
                                 // tslint:disable-next-line:no-non-null-assertion
                                 `"[resourceId(${escapeTleString(resType!.unquotedValue)}, ${escapeTleString(resName!.unquotedValue)})]"`;
                             const sortText = label;
-                            results.push(new Completion.Item(
+                            results.push(new Completion.Item({
                                 label,
-                                fullResourceIdExpression,
-                                replaceSpan,
-                                Completion.CompletionKind.DtDependsOn,
-                                fullResourceIdExpression,
+                                insertText: fullResourceIdExpression,
+                                span,
+                                kind: Completion.CompletionKind.DtDependsOn,
+                                detail: fullResourceIdExpression,
                                 documentation,
-                                undefined,
-                                undefined,
                                 sortText
-                            ));
+                            }));
                         }
 
                         function addExp1(): void {
@@ -330,17 +326,15 @@ export class TemplatePositionContext extends PositionContext {
                                 // tslint:disable-next-line:no-non-null-assertion
                                 `"resourceId: ${escapeTleString(resName!.unquotedValue)}"`;
                             const sortText = label;
-                            results.push(new Completion.Item(
+                            results.push(new Completion.Item({
                                 label,
-                                fullResourceIdExpression,
-                                replaceSpan,
-                                Completion.CompletionKind.DtDependsOn,
-                                fullResourceIdExpression,
+                                insertText: fullResourceIdExpression,
+                                span,
+                                kind: Completion.CompletionKind.DtDependsOn,
+                                detail: fullResourceIdExpression,
                                 documentation,
-                                undefined,
-                                undefined,
                                 sortText
-                            ));
+                            }));
                         }
 
                         // const insertText2 =
@@ -391,21 +385,19 @@ export class TemplatePositionContext extends PositionContext {
                     //const sortText = `"[${escapeTleString(resName.unquotedValue)}, ${escapeTleString(resType.unquotedValue)}]"`;
                     //const replaceSpan = new language.Span(insertIndex, insertLength);
 
-                    const typeInsertionText = escapeTleString(resType.unquotedValue);
-                    const label = typeInsertionText;
+                    const insertText = escapeTleString(resType.unquotedValue);
+                    const label = insertText;
                     const sortText = label;
-                    results.push(new Completion.Item(
-                        typeInsertionText,
-                        typeInsertionText,
-                        replaceSpanInfo.replaceSpan, //asdf replaceSpanInfo.includeRightParenthesisInCompletion?
-                        Completion.CompletionKind.DtDependsOn, //asdf
-                        typeInsertionText,
-                        typeInsertionText,
-                        undefined,
-                        undefined,
+                    results.push(new Completion.Item({
+                        label: insertText,
+                        insertText,
+                        span: replaceSpanInfo.replaceSpan, //asdf replaceSpanInfo.includeRightParenthesisInCompletion?
+                        kind: Completion.CompletionKind.DtDependsOn, //asdf
+                        detail: insertText,
+                        documentation: insertText,
                         sortText,
-                        [',']
-                    ));
+                        commitCharacters: [','] //asdf
+                    }));
                 }
             }
         }
@@ -415,7 +407,7 @@ export class TemplatePositionContext extends PositionContext {
 
     private getMatchingResourceNameCompletions(prefix: string, tleValue: TLE.FunctionCallValue | TLE.FunctionCallValue, tleCharacterIndex: number, scope: TemplateScope): Completion.Item[] {
         //const replaceSpanInfo: ReplaceSpanInfo = this.getReplaceSpanInfo(tleValue, tleCharacterIndex);
-        const replaceSpan = new language.Span(tleCharacterIndex, 0);
+        const span = new language.Span(tleCharacterIndex, 0);
 
         let resourceIdTypeArg: string | undefined;
         const resourceIdTypeArgExpr = tleValue.argumentExpressions[0];
@@ -439,18 +431,16 @@ export class TemplatePositionContext extends PositionContext {
 
                     const typeInsertionText = escapeTleString(resName.unquotedValue);
                     const label = typeInsertionText;
-                    results.push(new Completion.Item(
+                    results.push(new Completion.Item({ //asdf
                         label,
-                        typeInsertionText,
-                        replaceSpan, //asdf replaceSpanInfo.includeRightParenthesisInCompletion?
-                        Completion.CompletionKind.DtDependsOn, //asdf
-                        typeInsertionText,
-                        typeInsertionText,
-                        undefined,
-                        undefined,
+                        insertText: typeInsertionText,
+                        span, //asdf replaceSpanInfo.includeRightParenthesisInCompletion?
+                        kind: Completion.CompletionKind.DtDependsOn, //asdf
+                        detail: typeInsertionText,
+                        documentation: typeInsertionText,
                         sortText,
-                        [')', ','] //asdf:
-                    ));
+                        commitCharacters: [')', ','] //asdf:
+                    }));
                 }
             }
         }
