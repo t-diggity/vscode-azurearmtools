@@ -145,8 +145,8 @@ function findFunctionCallArgumentWithResourceType(
 
             let argTextLC = argText?.toLowerCase();
             for (let info of resources) {
-                const resFullType = getFullTypeName(info); // asdf put this into the info itself
-                if (resFullType.toLowerCase() === argTextLC) { //asdf put lc into info
+                const resFullType = getFullTypeName(info);
+                if (resFullType.toLowerCase() === argTextLC) {
                     return { argIndex, typeExpression: argText };
                 }
             }
@@ -169,7 +169,7 @@ function filterResourceInfosByNameSegment(infos: IResourceInfo[], segmentExpress
         return [];
     }
     const segmentExpressionLC = segmentExpression.toLowerCase();
-    return infos.filter(info => info.nameExpressions[segmentIndex]?.toLocaleLowerCase() === segmentExpressionLC); // asdf store LC?
+    return infos.filter(info => info.nameExpressions[segmentIndex]?.toLocaleLowerCase() === segmentExpressionLC);
 }
 
 /**
@@ -352,9 +352,9 @@ function removeSingleQuotes(expression: string): string {
     return expression;
 }
 
-function getFullTypeName(info: IResourceInfo): string { //asdf need the array?
+function getFullTypeName(info: IResourceInfo): string {
     if (info.typeExpressions.length > 1) {
-        return `'${info.typeExpressions.map(removeSingleQuotes).join('/')}'`; //asdf
+        return `'${info.typeExpressions.map(removeSingleQuotes).join('/')}'`;
     } else {
         return info.typeExpressions[0];
     }
