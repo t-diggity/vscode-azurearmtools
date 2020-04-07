@@ -21,7 +21,7 @@ export class ParametersPositionContext extends PositionContext {
     private _associatedTemplate: DeploymentTemplate | undefined;
 
     private constructor(deploymentParameters: DeploymentParameters, associatedTemplate: DeploymentTemplate | undefined) {
-        super(deploymentParameters);
+        super(deploymentParameters, associatedTemplate);
         this._associatedTemplate = associatedTemplate;
     }
 
@@ -69,15 +69,13 @@ export class ParametersPositionContext extends PositionContext {
         return undefined;
     }
 
-    // Returns undefined if references are not supported at this location.
-    // Returns empty list if supported but none found
-    public getReferences(): ReferenceList | undefined {
+    /**
+     * Return all references to the given reference site info in this document
+     * @returns undefined if references are not supported at this location, or empty list if supported but none found
+     */
+    protected getReferencesCore(): ReferenceList | undefined {
         const refInfo = this.getReferenceSiteInfo();
-        if (refInfo) {
-            return this.document.findReferences(refInfo.definition);
-        }
-
-        return undefined;
+        return refInfo ? this.document.findReferencesToDefinition(refInfo.definition) : undefined;
     }
 
     public getCompletionItems(): Completion.Item[] {

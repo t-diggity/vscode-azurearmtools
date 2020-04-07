@@ -14,6 +14,7 @@ import { IFunctionMetadata, IFunctionParameterMetadata } from "./IFunctionMetada
 import { IParameterDefinition } from "./IParameterDefinition";
 import * as Json from "./JSON";
 import * as language from "./Language";
+import { DeploymentParameters } from "./parameterFiles/DeploymentParameters";
 import { IReferenceSite, PositionContext } from "./PositionContext";
 import * as Reference from "./ReferenceList";
 import { TemplateScope } from "./TemplateScope";
@@ -43,16 +44,20 @@ class TleInfo implements ITleInfo {
 export class TemplatePositionContext extends PositionContext {
     private _tleInfo: CachedValue<TleInfo | undefined> = new CachedValue<TleInfo | undefined>();
 
-    public static fromDocumentLineAndColumnIndexes(deploymentTemplate: DeploymentTemplate, documentLineIndex: number, documentColumnIndex: number): TemplatePositionContext {
-        let context = new TemplatePositionContext(deploymentTemplate);
+    public static fromDocumentLineAndColumnIndexes(deploymentTemplate: DeploymentTemplate, documentLineIndex: number, documentColumnIndex: number, associatedParameters: DeploymentParameters | undefined): TemplatePositionContext {
+        let context = new TemplatePositionContext(deploymentTemplate, associatedParameters);
         context.initFromDocumentLineAndColumnIndices(documentLineIndex, documentColumnIndex);
         return context;
     }
 
-    public static fromDocumentCharacterIndex(deploymentTemplate: DeploymentTemplate, documentCharacterIndex: number): TemplatePositionContext {
-        let context = new TemplatePositionContext(deploymentTemplate);
+    public static fromDocumentCharacterIndex(deploymentTemplate: DeploymentTemplate, documentCharacterIndex: number, associatedParameters: DeploymentParameters | undefined): TemplatePositionContext {
+        let context = new TemplatePositionContext(deploymentTemplate, associatedParameters);
         context.initFromDocumentCharacterIndex(documentCharacterIndex);
         return context;
+    }
+
+    private constructor(deploymentTemplate: DeploymentTemplate, associatedParameters: DeploymentParameters | undefined) {
+        super(deploymentTemplate, associatedParameters);
     }
 
     public get document(): DeploymentTemplate {
@@ -448,17 +453,20 @@ export class TemplatePositionContext extends PositionContext {
         return Completion.Item.fromPropertyName(propertyName, replaceSpan);
     }
 
-    // Returns undefined if references are not supported at this location.
-    // Returns empty list if supported but none found
-    public getReferences(): Reference.ReferenceList | undefined {
+    /**
+     * Return all references to the given reference site info in this document
+     * @returns undefined if references are not supported at this location, or empty list if supported but none found
+     */
+    protected getReferencesCore(): Reference.ReferenceList | undefined {
         const tleInfo = this.tleInfo;
         if (tleInfo) { // If we're inside a string (whether an expression or not)
             const refInfo = this.getReferenceSiteInfo();
             if (refInfo) {
-                return this.document.findReferences(refInfo.definition);
+                return this.document.findReferencesToDefinition(refInfo.definition);
             }
 
             // Handle when we're directly on the name of a parameter/variable/etc definition (as opposed to a reference)
+            // CONSIDER: Why aren't these handled in getReferenceSiteInfo? asdf
             const jsonStringValue: Json.StringValue | undefined = Json.asStringValue(this.jsonValue);
             if (jsonStringValue) {
                 const unquotedString = jsonStringValue.unquotedValue;
@@ -467,26 +475,26 @@ export class TemplatePositionContext extends PositionContext {
                 // Is it a parameter definition?
                 const parameterDefinition: IParameterDefinition | undefined = scope.getParameterDefinition(unquotedString);
                 if (parameterDefinition && parameterDefinition.nameValue === jsonStringValue) {
-                    return this.document.findReferences(parameterDefinition);
+                    return this.document.findReferencesToDefinition(parameterDefinition);
                 }
 
                 // Is it a variable definition?
                 const variableDefinition: IVariableDefinition | undefined = scope.getVariableDefinition(unquotedString);
                 if (variableDefinition && variableDefinition.nameValue === jsonStringValue) {
-                    return this.document.findReferences(variableDefinition);
+                    return this.document.findReferencesToDefinition(variableDefinition);
                 }
 
                 // Is it a user namespace definition?
                 const namespaceDefinition: UserFunctionNamespaceDefinition | undefined = scope.getFunctionNamespaceDefinition(unquotedString);
                 if (namespaceDefinition && namespaceDefinition.nameValue === jsonStringValue) {
-                    return this.document.findReferences(namespaceDefinition);
+                    return this.document.findReferencesToDefinition(namespaceDefinition);
                 }
 
                 // Is it a user function definition inside any namespace?
                 for (let ns of scope.namespaceDefinitions) {
                     const userFunctionDefinition: UserFunctionDefinition | undefined = scope.getUserFunctionDefinition(ns.nameValue.unquotedValue, unquotedString);
                     if (userFunctionDefinition && userFunctionDefinition.nameValue === jsonStringValue) {
-                        return this.document.findReferences(userFunctionDefinition);
+                        return this.document.findReferencesToDefinition(userFunctionDefinition);
                     }
                 }
             }
